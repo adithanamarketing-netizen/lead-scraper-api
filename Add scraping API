@@ -1,0 +1,42 @@
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const { website } = req.query;
+  
+  if (!website) {
+    return res.json({ error: 'Website parameter required', success: false });
+  }
+
+  const SCRAPINGBEE_API_KEY = '1TYK5UXOTSRP2M2II9C64V5K8IWSIIL3ZLOEDF5BXRJ8F53WKK69OVDMIJF8WS6CSFXYSP8CBPKP5DZA';
+  
+  try {
+    const scrapingBeeUrl = `https://app.scrapingbee.com/api/v1/?api_key=${SCRAPINGBEE_API_KEY}&url=${encodeURIComponent('https://' + website)}&render_js=false`;
+    
+    const response = await fetch(scrapingBeeUrl);
+    
+    if (!response.ok) {
+      throw new Error(`ScrapingBee error: ${response.status}`);
+    }
+    
+    const html = await response.text();
+    
+    return res.json({ 
+      html: html,
+      success: true,
+      website: website
+    });
+    
+  } catch (error) {
+    return res.json({ 
+      error: error.message, 
+      success: false,
+      website: website
+    });
+  }
+}
